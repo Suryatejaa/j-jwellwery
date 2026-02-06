@@ -2,17 +2,29 @@ import { NextRequest, NextResponse } from 'next/server';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { v4 as uuidv4 } from 'uuid';
 
-const s3Client = new S3Client({
-  region: 'auto',
-  credentials: {
-    accessKeyId: process.env.R2_ACCESS_KEY_ID || '',
-    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || '',
-  },
-  endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-});
+function getS3Client() {
+  return new S3Client({
+    region: 'auto',
+    credentials: {
+      accessKeyId: process.env.R2_ACCESS_KEY_ID || '',
+      secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || '',
+    },
+    endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+    forcePathStyle: true,
+  });
+}
 
 export async function POST(request: NextRequest) {
   try {
+    // Validate environment variables
+    if (!process.env.R2_ACCESS_KEY_ID || !process.env.R2_SECRET_ACCESS_KEY) {
+      console.error('R2 credentials not configured');
+      return NextResponse.json(
+        { error: 'Server not configured for image uploads' },
+        { status: 500 }
+      );
+    }
+
     const formData = await request.formData();
     const files = formData.getAll('files') as File[];
 
@@ -31,6 +43,7 @@ export async function POST(request: NextRequest) {
     }
 
     const uploadedUrls: string[] = [];
+    const s3Client = getS3Client();
 
     for (const file of files) {
       // Validate file type

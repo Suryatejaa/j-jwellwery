@@ -271,3 +271,4 @@ MIT
 
 For issues or questions, check Firebase and Next.js documentation or create an issue in the repository.
 # j-jwellwery
+# j-jwellwery

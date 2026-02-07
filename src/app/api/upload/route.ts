@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { v4 as uuidv4 } from 'uuid';
 
 function getS3Client() {
@@ -18,7 +17,11 @@ function getS3Client() {
     },
     endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
     forcePathStyle: true,
+    // Disable SHA256 checksum calculation
+    requestChecksumCalculation: 'WHEN_REQUIRED',
+    responseChecksumValidation: 'WHEN_REQUIRED',
   });
+  
 }
 
 export async function POST(request: NextRequest) {
@@ -94,46 +97,29 @@ export async function POST(request: NextRequest) {
 
       // Read file buffer
       console.log('[UPLOAD] Reading file buffer...');
-      const buffer = await file.arrayBuffer();
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
       console.log(`[UPLOAD] File buffer size: ${buffer.byteLength} bytes`);
 
-      // Create presigned URL and upload
-      console.log(`[UPLOAD] Generating presigned URL for ${filename}...`);
+      // Upload to R2
+      console.log(`[UPLOAD] Uploading to R2 bucket 'j-jwellery' with key '${filename}'...`);
       try {
         const command = new PutObjectCommand({
           Bucket: 'j-jwellery',
           Key: filename,
+          Body: buffer,
           ContentType: file.type,
+          ChecksumAlgorithm: undefined as any,
         });
 
-        // Get presigned URL (valid for 1 hour)
-        const presignedUrl = await getSignedUrl(s3Client, command, { 
-          expiresIn: 3600,
-        });
-        console.log(`[UPLOAD] Presigned URL generated, uploading file...`);
-
-        // Upload using the presigned URL - pass buffer directly without Uint8Array conversion
-        const uploadResponse = await fetch(presignedUrl, {
-          method: 'PUT',
-          body: buffer,
-          headers: {
-            'Content-Type': file.type || 'application/octet-stream',
-          },
-        });
-
-        if (!uploadResponse.ok) {
-          const text = await uploadResponse.text();
-          console.error(`[UPLOAD] Presigned URL upload failed: ${uploadResponse.status}`, text);
-          throw new Error(`Upload failed with status ${uploadResponse.status}`);
-        }
-
+        await s3Client.send(command);
         console.log(`[UPLOAD] File uploaded successfully: ${filename}`);
       } catch (uploadError: any) {
-        console.error('[UPLOAD] Upload error:', {
+        console.error('[UPLOAD] S3 Upload error:', {
           message: uploadError.message,
           code: uploadError.code,
           name: uploadError.name,
-          fullError: uploadError,
+          statusCode: uploadError.$metadata?.httpStatusCode,
         });
         throw uploadError;
       }

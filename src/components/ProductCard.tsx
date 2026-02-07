@@ -18,13 +18,18 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
     setTimeout(() => setIsAdded(false), 2000);
   };
 
+  const imageUrl = product.images?.[0] || product.image || '/placeholder.svg';
+
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
       <div className="relative w-full h-64 bg-gray-200">
         <img
-          src={product.image || '/placeholder.jpg'}
+          src={imageUrl}
           alt={product.name}
           className="w-full h-full object-cover"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = '/placeholder.svg';
+          }}
         />
       </div>
       <div className="p-4">

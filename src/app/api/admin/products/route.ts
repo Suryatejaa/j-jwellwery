@@ -12,7 +12,7 @@ import {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, description, price, image, category } = body;
+    const { name, description, price, image, category, images } = body;
 
     if (!name || !price || !image || !category) {
       return NextResponse.json(
@@ -27,6 +27,7 @@ export async function POST(request: NextRequest) {
       description,
       price: parseFloat(price),
       image,
+      images: images && images.length > 0 ? images : [image],
       category,
       createdAt: Timestamp.now().toMillis(),
       updatedAt: Timestamp.now().toMillis(),
@@ -48,7 +49,7 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const { id, name, description, price, image, category } = body;
+    const { id, name, description, price, image, category, images } = body;
 
     if (!id) {
       return NextResponse.json(
@@ -63,6 +64,7 @@ export async function PUT(request: NextRequest) {
       description,
       price: parseFloat(price),
       image,
+      images: images && images.length > 0 ? images : [image],
       category,
       updatedAt: Timestamp.now().toMillis(),
     });

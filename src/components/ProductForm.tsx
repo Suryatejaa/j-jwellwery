@@ -17,7 +17,7 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
     image: product?.image || '',
   });
   const [uploadedImages, setUploadedImages] = useState<string[]>(
-    product?.image ? [product.image] : []
+    product?.images?.length ? product.images : (product?.image ? [product.image] : [])
   );
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -26,6 +26,16 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const removeImage = (index: number) => {
+    const newImages = uploadedImages.filter((_, i) => i !== index);
+    setUploadedImages(newImages);
+    
+    // If the removed image was the main image, set the first remaining image as main
+    if (formData.image === uploadedImages[index]) {
+      setFormData((prev) => ({ ...prev, image: newImages[0] || '' }));
+    }
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,43 +51,59 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
     setUploading(true);
 
     try {
-      const formDataToSend = new FormData();
-      Array.from(files).forEach((file) => {
-        formDataToSend.append('files', file);
-      });
-
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formDataToSend,
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Upload failed');
-      }
-
-      const data = await response.json();
-      const newImages = [...uploadedImages, ...data.urls];
-      setUploadedImages(newImages);
+      console.log('🔄 Starting upload for', files.length, 'files');
       
+      const uploadPromises = Array.from(files).map(async (file) => {
+        console.log(`📤 Getting presigned URL for: ${file.name}`);
+        
+        // Step 1: Get presigned URL from server
+        const urlResponse = await fetch('/api/upload-url', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fileName: file.name }),
+        });
+
+        if (!urlResponse.ok) {
+          const data = await urlResponse.json();
+          throw new Error(data.error || 'Failed to get upload URL');
+        }
+
+        const { uploadUrl, publicUrl } = await urlResponse.json();
+        console.log(`✅ Got presigned URL, uploading to R2...`);
+        console.log(`📍 Public URL will be: ${publicUrl}`);
+
+        // Step 2: Upload file directly to R2 using presigned URL
+        const uploadResponse = await fetch(uploadUrl, {
+          method: 'PUT',
+          body: file,
+          headers: {
+            'Content-Type': file.type || 'application/octet-stream',
+          },
+        });
+
+        if (!uploadResponse.ok) {
+          throw new Error(`Failed to upload ${file.name}`);
+        }
+
+        console.log(`✨ Successfully uploaded ${file.name}`);
+        // Return the public URL
+        return publicUrl;
+      });
+
+      const publicUrls = await Promise.all(uploadPromises);
+      console.log('🎉 All files uploaded. Public URLs:', publicUrls);
+      
+      const newImages = [...uploadedImages, ...publicUrls];
+      setUploadedImages(newImages);
+
       // Set first image as main image
       setFormData((prev) => ({ ...prev, image: newImages[0] }));
+      console.log('📸 Image URLs saved to form:', newImages);
     } catch (err: any) {
+      console.error('❌ Upload error:', err);
       setError(err.message || 'Failed to upload images');
     } finally {
       setUploading(false);
-    }
-  };
-
-  const removeImage = (index: number) => {
-    const newImages = uploadedImages.filter((_, i) => i !== index);
-    setUploadedImages(newImages);
-    
-    // If we removed the main image, set the first remaining image as main
-    if (uploadedImages[index] === formData.image && newImages.length > 0) {
-      setFormData((prev) => ({ ...prev, image: newImages[0] }));
-    } else if (newImages.length === 0) {
-      setFormData((prev) => ({ ...prev, image: '' }));
     }
   };
 
@@ -92,7 +118,13 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
         setLoading(false);
         return;
       }
-      await onSubmit(formData);
+      
+      // Pass both image (main) and images (array) to backend
+      await onSubmit({
+        ...formData,
+        images: uploadedImages,
+      });
+      
       if (!product) {
         setFormData({
           name: '',
@@ -101,7 +133,8 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
           category: '',
           image: '',
         });
-        setUploadedImages([]);      }
+        setUploadedImages([]);
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to save product');
     } finally {

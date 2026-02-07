@@ -51,10 +51,10 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
     setUploading(true);
 
     try {
-      console.log('🔄 Starting upload for', files.length, 'files');
+      console.log('[UPLOAD] Starting upload for', files.length, 'files');
       
       const uploadPromises = Array.from(files).map(async (file) => {
-        console.log(`📤 Getting presigned URL for: ${file.name}`);
+        console.log('[UPLOAD] Getting presigned URL for:', file.name);
         
         // Step 1: Get presigned URL from server
         const urlResponse = await fetch('/api/upload-url', {
@@ -69,8 +69,8 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
         }
 
         const { uploadUrl, publicUrl } = await urlResponse.json();
-        console.log(`✅ Got presigned URL, uploading to R2...`);
-        console.log(`📍 Public URL will be: ${publicUrl}`);
+        console.log('[UPLOAD] Got presigned URL, uploading to R2');
+        console.log('[UPLOAD] Public URL will be:', publicUrl);
 
         // Step 2: Upload file directly to R2 using presigned URL
         const uploadResponse = await fetch(uploadUrl, {
@@ -85,22 +85,22 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
           throw new Error(`Failed to upload ${file.name}`);
         }
 
-        console.log(`✨ Successfully uploaded ${file.name}`);
+        console.log('[UPLOAD] Successfully uploaded', file.name);
         // Return the public URL
         return publicUrl;
       });
 
       const publicUrls = await Promise.all(uploadPromises);
-      console.log('🎉 All files uploaded. Public URLs:', publicUrls);
+      console.log('[UPLOAD] All files uploaded. Public URLs:', publicUrls);
       
       const newImages = [...uploadedImages, ...publicUrls];
       setUploadedImages(newImages);
 
       // Set first image as main image
       setFormData((prev) => ({ ...prev, image: newImages[0] }));
-      console.log('📸 Image URLs saved to form:', newImages);
+      console.log('[UPLOAD] Image URLs saved to form:', newImages);
     } catch (err: any) {
-      console.error('❌ Upload error:', err);
+      console.error('[UPLOAD] Error:', err);
       setError(err.message || 'Failed to upload images');
     } finally {
       setUploading(false);

@@ -53,47 +53,25 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
     try {
       console.log('[UPLOAD] Starting upload for', files.length, 'files');
       
-      const uploadPromises = Array.from(files).map(async (file) => {
-        console.log('[UPLOAD] Getting presigned URL for:', file.name);
-        
-        // Step 1: Get presigned URL from server
-        const urlResponse = await fetch('/api/upload-url', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ fileName: file.name }),
-        });
-
-        if (!urlResponse.ok) {
-          const data = await urlResponse.json();
-          throw new Error(data.error || 'Failed to get upload URL');
-        }
-
-        const { uploadUrl, publicUrl } = await urlResponse.json();
-        console.log('[UPLOAD] Got presigned URL, uploading to R2');
-        console.log('[UPLOAD] Public URL will be:', publicUrl);
-
-        // Step 2: Upload file directly to R2 using presigned URL
-        const uploadResponse = await fetch(uploadUrl, {
-          method: 'PUT',
-          body: file,
-          headers: {
-            'Content-Type': file.type || 'application/octet-stream',
-          },
-        });
-
-        if (!uploadResponse.ok) {
-          throw new Error(`Failed to upload ${file.name}`);
-        }
-
-        console.log('[UPLOAD] Successfully uploaded', file.name);
-        // Return the public URL
-        return publicUrl;
+      const formData = new FormData();
+      Array.from(files).forEach(file => {
+        formData.append('files', file);
       });
 
-      const publicUrls = await Promise.all(uploadPromises);
-      console.log('[UPLOAD] All files uploaded. Public URLs:', publicUrls);
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to upload images');
+      }
+
+      const { urls } = await response.json();
+      console.log('[UPLOAD] All files uploaded. Public URLs:', urls);
       
-      const newImages = [...uploadedImages, ...publicUrls];
+      const newImages = [...uploadedImages, ...urls];
       setUploadedImages(newImages);
 
       // Set first image as main image

@@ -2,19 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { v4 as uuidv4 } from 'uuid';
+import { getR2Config } from '@/lib/r2';
 
-function getS3Client() {
-  const accessKeyId = process.env.R2_ACCESS_KEY_ID?.trim();
-  const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY?.trim();
-  const accountId = process.env.R2_ACCOUNT_ID?.trim();
-
+function getS3Client(config: ReturnType<typeof getR2Config>) {
   return new S3Client({
     region: 'auto',
     credentials: {
-      accessKeyId: accessKeyId || '',
-      secretAccessKey: secretAccessKey || '',
+      accessKeyId: config.accessKeyId,
+      secretAccessKey: config.secretAccessKey,
     },
-    endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+    endpoint: `https://${config.accountId}.r2.cloudflarestorage.com`,
     forcePathStyle: true,
   });
 }
@@ -30,32 +27,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const accountId = process.env.R2_ACCOUNT_ID?.trim();
-    if (!accountId) {
-      return NextResponse.json(
-        { error: 'R2 account ID not configured' },
-        { status: 500 }
-      );
-    }
+    const config = getR2Config();
 
     // Generate unique key with products prefix
     const ext = fileName.split('.').pop();
     const key = `products/${uuidv4()}.${ext}`;
 
-    const s3Client = getS3Client();
+    const s3Client = getS3Client(config);
 
     // Generate presigned URL for uploading
     const uploadUrl = await getSignedUrl(
       s3Client,
       new PutObjectCommand({
-        Bucket: 'j-jwellery',
+        Bucket: config.bucketName,
         Key: key,
       }),
       { expiresIn: 3600 } // 1 hour
     );
 
     // Construct public URL for accessing the file
-    const publicUrl = `https://${accountId}.r2.cloudflarestorage.com/j-jwellery/${key}`;
+    const publicUrl = `${config.bucketUrl}/${key}`;
 
     return NextResponse.json(
       {

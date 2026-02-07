@@ -1,21 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { v4 as uuidv4 } from 'uuid';
+import { getR2Config } from '@/lib/r2';
 
-function getS3Client() {
-  const accessKeyId = process.env.R2_ACCESS_KEY_ID?.trim();
-  const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY?.trim();
-  const accountId = process.env.R2_ACCOUNT_ID?.trim();
-
+function getS3Client(config: ReturnType<typeof getR2Config>) {
   console.log('[S3CLIENT] Creating S3 client');
-
   return new S3Client({
     region: 'us-east-1',
     credentials: {
-      accessKeyId: accessKeyId || '',
-      secretAccessKey: secretAccessKey || '',
+      accessKeyId: config.accessKeyId,
+      secretAccessKey: config.secretAccessKey,
     },
-    endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+    endpoint: `https://${config.accountId}.r2.cloudflarestorage.com`,
     forcePathStyle: true,
     // Disable SHA256 checksum calculation
     requestChecksumCalculation: 'WHEN_REQUIRED',
@@ -30,18 +26,7 @@ export async function POST(request: NextRequest) {
     
     // Validate environment variables
     console.log('[UPLOAD] Checking R2 credentials...');
-    console.log('[UPLOAD] R2_ACCOUNT_ID:', process.env.R2_ACCOUNT_ID ? 'SET' : 'MISSING');
-    console.log('[UPLOAD] R2_ACCESS_KEY_ID:', process.env.R2_ACCESS_KEY_ID ? 'SET' : 'MISSING');
-    console.log('[UPLOAD] R2_SECRET_ACCESS_KEY:', process.env.R2_SECRET_ACCESS_KEY ? 'SET' : 'MISSING');
-    console.log('[UPLOAD] NEXT_PUBLIC_R2_BUCKET_URL:', process.env.NEXT_PUBLIC_R2_BUCKET_URL);
-    
-    if (!process.env.R2_ACCESS_KEY_ID || !process.env.R2_SECRET_ACCESS_KEY) {
-      console.error('[UPLOAD] R2 credentials not configured');
-      return NextResponse.json(
-        { error: 'Server not configured for image uploads' },
-        { status: 500 }
-      );
-    }
+    const config = getR2Config();
 
     console.log('[UPLOAD] Parsing form data...');
     const formData = await request.formData();
@@ -66,7 +51,7 @@ export async function POST(request: NextRequest) {
 
     const uploadedUrls: string[] = [];
     console.log('[UPLOAD] Creating S3 client...');
-    const s3Client = getS3Client();
+    const s3Client = getS3Client(config);
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
@@ -102,10 +87,10 @@ export async function POST(request: NextRequest) {
       console.log(`[UPLOAD] File buffer size: ${buffer.byteLength} bytes`);
 
       // Upload to R2
-      console.log(`[UPLOAD] Uploading to R2 bucket 'j-jwellery' with key '${filename}'...`);
+      console.log(`[UPLOAD] Uploading to R2 bucket '${config.bucketName}' with key '${filename}'...`);
       try {
         const command = new PutObjectCommand({
-          Bucket: 'j-jwellery',
+          Bucket: config.bucketName,
           Key: filename,
           Body: buffer,
           ContentType: file.type,
@@ -125,7 +110,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Generate public URL
-      const url = `${process.env.NEXT_PUBLIC_R2_BUCKET_URL}/${filename}`;
+      const url = `${config.bucketUrl}/${filename}`;
       console.log(`[UPLOAD] Generated public URL: ${url}`);
       uploadedUrls.push(url);
     }

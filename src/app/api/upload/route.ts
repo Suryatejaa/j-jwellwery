@@ -91,11 +91,15 @@ export async function POST(request: NextRequest) {
         })
       );
 
-      // Return private authenticated URL (will be converted to public for display)
-      const accountId = process.env.R2_ACCOUNT_ID?.trim();
-      const privateUrl = `https://${accountId}.r2.cloudflarestorage.com/j-jwellery/${filename}`;
-      uploadedUrls.push(privateUrl);
-      console.log(`[UPLOAD] Uploaded: ${filename} → private URL`);
+      // Return public R2 URL for display
+      const bucketUrl = process.env.NEXT_PUBLIC_R2_BUCKET_URL?.trim();
+      if (!bucketUrl) {
+        throw new Error('R2 bucket URL not configured');
+      }
+      
+      const publicUrl = `${bucketUrl}/${filename}`;
+      uploadedUrls.push(publicUrl);
+      console.log(`[UPLOAD] Uploaded: ${filename} → ${publicUrl}`);
     }
 
     console.log(`[UPLOAD] Complete. URLs: ${uploadedUrls.length}`);

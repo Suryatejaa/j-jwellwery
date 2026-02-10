@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Product } from '@/types';
 import { convertPrivateToPublicR2Url } from '@/lib/url-utils';
+import ImageCropper from './ImageCropper';
 
 interface ProductFormProps {
   product?: Product;
@@ -23,6 +24,9 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [cropImage, setCropImage] = useState<string | null>(null);
+  const [filesToCrop, setFilesToCrop] = useState<File[]>([]);
+  const [currentCropIndex, setCurrentCropIndex] = useState(0);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -49,19 +53,54 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
     }
 
     setError('');
-    setUploading(true);
+    
+    // Start cropping process
+    setFilesToCrop(Array.from(files));
+    setCurrentCropIndex(0);
+    
+    // Show crop modal for first image
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setCropImage(event.target?.result as string);
+    };
+    reader.readAsDataURL(files[0]);
+  };
 
+  const handleCropDone = async (croppedFile: File) => {
+    const newFiles = [...filesToCrop];
+    newFiles[currentCropIndex] = croppedFile;
+    setFilesToCrop(newFiles);
+
+    // Move to next image or upload
+    if (currentCropIndex < filesToCrop.length - 1) {
+      setCurrentCropIndex(currentCropIndex + 1);
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setCropImage(event.target?.result as string);
+      };
+      reader.readAsDataURL(filesToCrop[currentCropIndex + 1]);
+    } else {
+      // All images cropped, now upload
+      await uploadCroppedImages(newFiles);
+      setCropImage(null);
+      setFilesToCrop([]);
+      setCurrentCropIndex(0);
+    }
+  };
+
+  const uploadCroppedImages = async (croppedFiles: File[]) => {
+    setUploading(true);
     try {
-      console.log('[UPLOAD] Starting upload for', files.length, 'files');
+      console.log('[UPLOAD] Starting upload for', croppedFiles.length, 'cropped files');
       
-      const formData = new FormData();
-      Array.from(files).forEach(file => {
-        formData.append('files', file);
+      const uploadFormData = new FormData();
+      croppedFiles.forEach(file => {
+        uploadFormData.append('files', file);
       });
 
       const response = await fetch('/api/upload', {
         method: 'POST',
-        body: formData,
+        body: uploadFormData,
       });
 
       console.log('[UPLOAD] Response status:', response.status);
@@ -77,6 +116,7 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
       
       const newImages = [...uploadedImages, ...urls];
       setUploadedImages(newImages);
+      console.log('[UPLOAD] Uploaded images state updated:', newImages);
 
       // Set first image as main image
       setFormData((prev) => ({ ...prev, image: newImages[0] }));
@@ -87,6 +127,12 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleCropCancel = () => {
+    setCropImage(null);
+    setFilesToCrop([]);
+    setCurrentCropIndex(0);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -125,7 +171,15 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <>
+      {cropImage && (
+        <ImageCropper
+          imageSrc={cropImage}
+          onCropDone={handleCropDone}
+          onCancel={handleCropCancel}
+        />
+      )}
+      <form onSubmit={handleSubmit} className="space-y-4">
       {error && (
         <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
           {error}
@@ -280,5 +334,6 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
         {loading ? 'Saving...' : product ? 'Update Product' : 'Add Product'}
       </button>
     </form>
+    </>
   );
 }

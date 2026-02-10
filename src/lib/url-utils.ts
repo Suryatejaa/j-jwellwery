@@ -1,6 +1,6 @@
 /**
- * Pass through public R2 URLs directly
- * No conversion needed - URLs from API are already public
+ * Pass through R2 URLs directly - they are already public and accessible
+ * No conversion needed since URLs are already public CDN URLs
  */
 export function convertPrivateToPublicR2Url(imageUrl: string): string {
   return imageUrl;

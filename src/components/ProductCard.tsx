@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Product } from '@/types';
+import { convertPrivateToPublicR2Url } from '@/lib/url-utils';
 
 interface ProductCardProps {
   product: Product;
@@ -18,7 +19,8 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
     setTimeout(() => setIsAdded(false), 2000);
   };
 
-  const imageUrl = product.images?.[0] || product.image || '/placeholder.svg';
+  const privateImageUrl = product.images?.[0] || product.image || '/placeholder.svg';
+  const imageUrl = convertPrivateToPublicR2Url(privateImageUrl);
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">

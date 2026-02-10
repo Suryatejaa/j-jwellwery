@@ -1,6 +1,7 @@
 'use client';
 
 import { Product } from '@/types';
+import { convertPrivateToPublicR2Url } from '@/lib/url-utils';
 
 interface ProductListProps {
   products: Product[];
@@ -20,7 +21,8 @@ export default function ProductList({ products, onEdit, onDelete }: ProductListP
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {products.map((product) => {
-        const imageUrl = product.images?.[0] || product.image || '/placeholder.svg';
+        const privateUrl = product.images?.[0] || product.image || '/placeholder.svg';
+        const imageUrl = convertPrivateToPublicR2Url(privateUrl);
         console.log('Rendering product:', product.name, 'with image URL:', imageUrl);
         return (
           <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">

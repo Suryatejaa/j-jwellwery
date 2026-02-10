@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Product } from '@/types';
+import { convertPrivateToPublicR2Url } from '@/lib/url-utils';
 
 interface ProductFormProps {
   product?: Product;
@@ -63,12 +64,15 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
         body: formData,
       });
 
+      console.log('[UPLOAD] Response status:', response.status);
+      const responseData = await response.json();
+      console.log('[UPLOAD] Response data:', responseData);
+
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to upload images');
+        throw new Error(responseData.error || 'Failed to upload images');
       }
 
-      const { urls } = await response.json();
+      const { urls } = responseData;
       console.log('[UPLOAD] All files uploaded. Public URLs:', urls);
       
       const newImages = [...uploadedImages, ...urls];
@@ -216,16 +220,25 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
         <div className="mt-4">
           <p className="text-sm font-medium text-gray-700 mb-2">Uploaded Images:</p>
           <div className="grid grid-cols-3 gap-3">
-            {uploadedImages.map((imageUrl, index) => (
+            {uploadedImages.map((imageUrl, index) => {
+              const displayUrl = convertPrivateToPublicR2Url(imageUrl);
+              return (
               <div key={index} className="relative group">
                 <img
-                  src={imageUrl}
+                  src={displayUrl}
                   alt={`Product ${index + 1}`}
                   className={`w-24 h-24 object-cover rounded-lg border-2 ${
                     formData.image === imageUrl
                       ? 'border-emerald-600'
                       : 'border-gray-300'
                   }`}
+                  onError={(e) => {
+                    console.log(`[PREVIEW] Image failed to load at index ${index}:`, displayUrl);
+                    (e.target as HTMLImageElement).src = '/placeholder.svg';
+                  }}
+                  onLoad={() => {
+                    console.log(`[PREVIEW] Image loaded successfully at index ${index}:`, displayUrl);
+                  }}
                 />
                 <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 rounded-lg transition-all">
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -244,7 +257,8 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
                   </div>
                 )}
               </div>
-            ))}
+            );
+            })}
           </div>
           <p className="text-xs text-gray-500 mt-2">
             {uploadedImages[0] === formData.image ? 'First image' : 'Select first image'} will be shown in store

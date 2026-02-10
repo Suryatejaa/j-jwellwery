@@ -44,10 +44,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const accountId = process.env.R2_ACCOUNT_ID?.trim();
-    if (!accountId) {
+    const bucketUrl = process.env.NEXT_PUBLIC_R2_BUCKET_URL?.trim();
+    if (!bucketUrl) {
       return NextResponse.json(
-        { error: 'R2 account ID not configured' },
+        { error: 'R2 bucket URL not configured' },
         { status: 500 }
       );
     }
@@ -91,9 +91,11 @@ export async function POST(request: NextRequest) {
         })
       );
 
-      const publicUrl = `https://${accountId}.r2.cloudflarestorage.com/j-jwellery/${filename}`;
-      uploadedUrls.push(publicUrl);
-      console.log(`[UPLOAD] Uploaded: ${filename}`);
+      // Return private authenticated URL (will be converted to public for display)
+      const accountId = process.env.R2_ACCOUNT_ID?.trim();
+      const privateUrl = `https://${accountId}.r2.cloudflarestorage.com/j-jwellery/${filename}`;
+      uploadedUrls.push(privateUrl);
+      console.log(`[UPLOAD] Uploaded: ${filename} → private URL`);
     }
 
     console.log(`[UPLOAD] Complete. URLs: ${uploadedUrls.length}`);

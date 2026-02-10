@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { Product, CartItem } from '@/types';
 import Carousel from '@/components/Carousel';
 import { generateWhatsAppLink } from '@/lib/whatsapp';
@@ -11,6 +12,9 @@ interface ProductDetailClientProps {
 }
 
 export default function ProductDetailClient({ productId }: ProductDetailClientProps) {
+  const params = useParams();
+  const resolvedProductId =
+    productId || (typeof params?.id === 'string' ? params.id : Array.isArray(params?.id) ? params.id[0] : '');
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -19,12 +23,16 @@ export default function ProductDetailClient({ productId }: ProductDetailClientPr
 
   useEffect(() => {
     fetchProduct();
-  }, [productId]);
+  }, [resolvedProductId]);
 
   const fetchProduct = async () => {
     try {
+      if (!resolvedProductId) {
+        setError('Product not found');
+        return;
+      }
       setLoading(true);
-      const response = await fetch(`/api/products?id=${productId}`);
+      const response = await fetch(`/api/products?id=${resolvedProductId}`);
       if (!response.ok) throw new Error('Product not found');
       const data = await response.json();
       setProduct(Array.isArray(data) ? data[0] : data);

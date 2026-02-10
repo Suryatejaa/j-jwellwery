@@ -1,26 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-import { v4 as uuidv4 } from 'uuid';
-
-function getS3Client() {
-  const accessKeyId = process.env.R2_ACCESS_KEY_ID?.trim();
-  const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY?.trim();
-  const accountId = process.env.R2_ACCOUNT_ID?.trim();
-
-  if (!accessKeyId || !secretAccessKey || !accountId) {
-    throw new Error('R2 credentials not configured');
-  }
-
-  return new S3Client({
-    region: 'auto',
-    credentials: {
-      accessKeyId,
-      secretAccessKey,
-    },
-    endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
-    forcePathStyle: true,
-  });
-}
+import { uploadFileToR2 } from '@/lib/r2-service';
 
 export async function POST(request: NextRequest) {
   try {
@@ -44,16 +23,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const bucketUrl = process.env.NEXT_PUBLIC_R2_BUCKET_URL?.trim();
-    if (!bucketUrl) {
-      return NextResponse.json(
-        { error: 'R2 bucket URL not configured' },
-        { status: 500 }
-      );
-    }
-
     const uploadedUrls: string[] = [];
-    const s3Client = getS3Client();
 
     for (const file of files) {
       console.log(`[UPLOAD] Processing file: ${file.name}`);
@@ -74,32 +44,18 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Generate unique filename
-      const ext = file.name.split('.').pop();
-      const filename = `products/${uuidv4()}.${ext}`;
-
       // Upload to R2
       const arrayBuffer = await file.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
-
-      await s3Client.send(
-        new PutObjectCommand({
-          Bucket: 'j-jwellery',
-          Key: filename,
-          Body: buffer,
-          ContentType: file.type,
-        })
+      
+      const { publicUrl } = await uploadFileToR2(
+        buffer,
+        file.name,
+        file.type,
+        'products'
       );
 
-      // Return public R2 URL for display
-      const bucketUrl = process.env.NEXT_PUBLIC_R2_BUCKET_URL?.trim();
-      if (!bucketUrl) {
-        throw new Error('R2 bucket URL not configured');
-      }
-      
-      const publicUrl = `${bucketUrl}/${filename}`;
       uploadedUrls.push(publicUrl);
-      console.log(`[UPLOAD] Uploaded: ${filename} → ${publicUrl}`);
     }
 
     console.log(`[UPLOAD] Complete. URLs: ${uploadedUrls.length}`);

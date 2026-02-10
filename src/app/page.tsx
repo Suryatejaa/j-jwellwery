@@ -15,6 +15,20 @@ export default function Home() {
     fetchProducts();
   }, []);
 
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('cart');
+      if (stored) {
+        const parsed = JSON.parse(stored) as CartItem[];
+        if (Array.isArray(parsed)) {
+          setCart(parsed);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load cart from storage', err);
+    }
+  }, []);
+
   const fetchProducts = async () => {
     try {
       setLoading(true);
@@ -57,7 +71,25 @@ export default function Home() {
   };
 
   const handleRemoveFromCart = (productId: string) => {
-    setCart((prevCart) => prevCart.filter((item) => item.productId !== productId));
+    setCart((prevCart) => {
+      const newCart = prevCart.filter((item) => item.productId !== productId);
+      localStorage.setItem('cart', JSON.stringify(newCart));
+      return newCart;
+    });
+  };
+
+  const handleUpdateQuantity = (productId: string, delta: number) => {
+    setCart((prevCart) => {
+      const newCart = prevCart
+        .map((item) =>
+          item.productId === productId
+            ? { ...item, quantity: item.quantity + delta }
+            : item
+        )
+        .filter((item) => item.quantity > 0);
+      localStorage.setItem('cart', JSON.stringify(newCart));
+      return newCart;
+    });
   };
 
   return (
@@ -67,12 +99,12 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-4 py-6">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold text-slate-800">✨ Jewelry Showcase</h1>
+              <h1 className="text-3xl font-bold text-slate-800">Jewelry</h1>
               <p className="text-slate-600 text-sm mt-1">Premium Collection</p>
             </div>
             <a
               href="/admin/login"
-              className="text-slate-600 hover:text-slate-800 text-sm font-medium"
+              className="hidden text-slate-600 hover:text-slate-800 text-sm font-medium"
             >
               Admin
             </a>
@@ -112,7 +144,11 @@ export default function Home() {
       </main>
 
       {/* Cart */}
-      <Cart items={cart} onRemoveItem={handleRemoveFromCart} />
+      <Cart
+        items={cart}
+        onRemoveItem={handleRemoveFromCart}
+        onUpdateQuantity={handleUpdateQuantity}
+      />
     </div>
   );
 }

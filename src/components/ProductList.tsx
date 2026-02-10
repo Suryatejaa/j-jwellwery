@@ -45,7 +45,7 @@ export default function ProductList({ products, onEdit, onDelete }: ProductListP
               <p className="text-gray-600 text-sm mb-3 line-clamp-2">{product.description}</p>
 
               <div className="flex justify-between items-center mb-4">
-                <span className="text-2xl font-bold text-emerald-600">${product.price}</span>
+                <span className="text-2xl font-bold text-emerald-600">₹{product.price}</span>
               </div>
 
               <div className="flex gap-2">

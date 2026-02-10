@@ -218,7 +218,7 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Price ($) *
+            Price (₹) *
           </label>
           <input
             type="number"

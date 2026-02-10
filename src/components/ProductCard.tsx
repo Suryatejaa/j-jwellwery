@@ -81,7 +81,7 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
           <h3 className="text-lg font-semibold text-gray-800 mb-2">{product.name}</h3>
           <p className="text-gray-600 text-sm mb-3 line-clamp-2">{product.description}</p>
           <div className="flex justify-between items-center">
-            <span className="text-2xl font-bold text-emerald-600">${product.price}</span>
+            <span className="text-2xl font-bold text-emerald-600">₹{product.price}</span>
             <button
               onClick={(e) => {
                 e.preventDefault();

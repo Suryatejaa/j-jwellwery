@@ -9,7 +9,7 @@ export const generateOrderMessage = (products: Array<{ name: string; price: numb
   let message = `${process.env.NEXT_PUBLIC_WHATSAPP_MESSAGE || 'Hi! I am interested in'}\n\n`;
   
   products.forEach((product) => {
-    message += `• ${product.name} - $${product.price}\n`;
+    message += `• ${product.name} - ₹${product.price}\n`;
   });
   
   message += `\nCould you please provide more details?`;

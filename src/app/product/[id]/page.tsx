@@ -2,16 +2,18 @@ import { headers } from 'next/headers';
 import ProductDetailClient from '@/components/ProductDetailClient';
 import { Product } from '@/types';
 
+export const dynamic = 'force-dynamic';
+
 type PageParams = {
   params: { id: string };
 };
 
-function getBaseUrl() {
+async function getBaseUrl() {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
   if (siteUrl) {
     return siteUrl.replace(/\/+$/, '');
   }
-  const headerList = headers();
+  const headerList = await headers();
   const host = headerList.get('host');
   const proto = headerList.get('x-forwarded-proto') || 'https';
   if (!host) return '';
@@ -29,7 +31,7 @@ async function fetchProduct(baseUrl: string, productId: string) {
 }
 
 export async function generateMetadata({ params }: PageParams) {
-  const baseUrl = getBaseUrl();
+  const baseUrl = await getBaseUrl();
   const product = (await fetchProduct(baseUrl, params.id)) as Product | null;
 
   if (!product) {

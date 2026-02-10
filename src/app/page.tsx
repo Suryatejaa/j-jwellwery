@@ -31,25 +31,28 @@ export default function Home() {
   };
 
   const handleAddToCart = (product: Product) => {
+    // Store in both state and localStorage for persistence
+    const cartItem: CartItem = {
+      productId: product.id,
+      name: product.name,
+      price: product.price,
+      quantity: 1,
+      image: product.images?.[0] || product.image,
+    };
+
     setCart((prevCart) => {
       const existingItem = prevCart.find((item) => item.productId === product.id);
-      if (existingItem) {
-        return prevCart.map((item) =>
-          item.productId === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      }
-      return [
-        ...prevCart,
-        {
-          productId: product.id,
-          name: product.name,
-          price: product.price,
-          quantity: 1,
-          image: product.image,
-        },
-      ];
+      const newCart = existingItem
+        ? prevCart.map((item) =>
+            item.productId === product.id
+              ? { ...item, quantity: item.quantity + 1 }
+              : item
+          )
+        : [...prevCart, cartItem];
+
+      // Persist to localStorage
+      localStorage.setItem('cart', JSON.stringify(newCart));
+      return newCart;
     });
   };
 

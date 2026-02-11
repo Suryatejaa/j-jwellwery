@@ -11,8 +11,18 @@ export default function HeroCarousel({ images, intervalMs = 4000 }: HeroCarousel
   const [index, setIndex] = useState(0);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const fallbackTimerRef = useRef<number | null>(null);
   const advancedRef = useRef(false);
+
+  // Handlers attached inline to elements will call these helpers
+  const advanceIfCurrent = (fromIndex: number) => {
+    if (fromIndex !== index) return;
+    if (!advancedRef.current) {
+      advancedRef.current = true;
+      setIndex((i) => (i + 1) % images.length);
+    }
+  };
 
   useEffect(() => {
     if (!images || images.length <= 1) return;
@@ -24,6 +34,23 @@ export default function HeroCarousel({ images, intervalMs = 4000 }: HeroCarousel
     const isCurrentVideo = /\.mp4$/i.test(currentSrc);
 
     let intervalId: ReturnType<typeof setInterval> | undefined;
+    let onEnded: (() => void) | null = null;
+    let onLoadedMetadata: (() => void) | null = null;
+
+    // Pause any non-active <video> elements immediately to avoid overlap
+    try {
+      if (containerRef.current) {
+        const vids = Array.from(containerRef.current.querySelectorAll<HTMLVideoElement>('video'));
+        vids.forEach((v) => {
+          const idx = Number(v.dataset.slideIndex);
+          if (!Number.isNaN(idx) && idx !== index) {
+            try { v.pause(); v.currentTime = 0; } catch (e) { /* ignore */ }
+          }
+        });
+      }
+    } catch (e) {
+      /* ignore */
+    }
 
     // Clear previous fallback if any
     if (fallbackTimerRef.current) {
@@ -36,40 +63,56 @@ export default function HeroCarousel({ images, intervalMs = 4000 }: HeroCarousel
     if (isCurrentVideo) {
       // If current slide is a video, control playback via a captured ref and advance on ended
       const vidEl = videoRef.current;
+      const advanceOnce = () => {
+        if (!advancedRef.current) {
+          advancedRef.current = true;
+          advance();
+        }
+      };
+
       if (vidEl) {
         try {
           vidEl.currentTime = 0;
         } catch (e) {
           /* ignore */
         }
-        // Try to autoplay muted video
-        vidEl.play().catch((e) => console.debug('Video play failed:', e));
 
-        // Advance on ended (idempotent via advancedRef)
-        const onVideoEnded = () => {
-          if (!advancedRef.current) {
-            advancedRef.current = true;
-            advance();
-          }
+        // Conservative initial fallback (gives videos time to load metadata)
+        const conservativeFallback = Math.max(10000, intervalMs * 2);
+        fallbackTimerRef.current = window.setTimeout(() => {
+          advanceOnce();
+        }, conservativeFallback + 250);
+
+        // Handler to advance when video truly ends. Guard with vidEl equality to avoid stale handlers advancing again.
+        onEnded = () => {
+          if (videoRef.current !== vidEl) return;
+          advanceOnce();
         };
-        vidEl.onended = onVideoEnded;
 
-        // Fallback: if onended doesn't fire, advance after duration + small buffer
-        const durationMs = isFinite(vidEl.duration) && vidEl.duration > 0 ? vidEl.duration * 1000 : intervalMs;
-        fallbackTimerRef.current = window.setTimeout(() => {
-          if (!advancedRef.current) {
-            advancedRef.current = true;
-            advance();
+        // When metadata loads we can tighten the fallback to the real duration
+        onLoadedMetadata = () => {
+          if (videoRef.current !== vidEl) return;
+          if (fallbackTimerRef.current) {
+            clearTimeout(fallbackTimerRef.current);
+            fallbackTimerRef.current = null;
           }
-        }, durationMs + 250);
+          const durMs = isFinite(vidEl.duration) && vidEl.duration > 0 ? vidEl.duration * 1000 : conservativeFallback;
+          fallbackTimerRef.current = window.setTimeout(() => {
+            if (videoRef.current === vidEl) advanceOnce();
+          }, durMs + 250);
+        };
+
+        vidEl.addEventListener('ended', onEnded);
+        vidEl.addEventListener('loadedmetadata', onLoadedMetadata);
+
+        // Try to autoplay muted video
+        vidEl.muted = true;
+        vidEl.play().catch((e) => console.debug('Video play failed:', e));
       } else {
-        // No video element available yet; as a safety, still set a fallback
+        // No video element available yet; set a conservative fallback to avoid skipping quickly
         fallbackTimerRef.current = window.setTimeout(() => {
-          if (!advancedRef.current) {
-            advancedRef.current = true;
-            advance();
-          }
-        }, intervalMs + 250);
+          advanceOnce();
+        }, Math.max(10000, intervalMs * 2) + 250);
       }
     } else {
       // Non-video slides: use interval for auto-advance
@@ -86,16 +129,17 @@ export default function HeroCarousel({ images, intervalMs = 4000 }: HeroCarousel
       }
       const vidEl = videoRef.current;
       if (vidEl) {
-        // pause any playing video and remove handler when leaving this effect
+        // pause any playing video and remove handlers when leaving this effect
         try {
           vidEl.pause();
         } catch (e) {
           /* ignore */
         }
-        try {
-          vidEl.onended = null;
-        } catch (e) {
-          /* ignore */
+        if (onEnded) {
+          try { vidEl.removeEventListener('ended', onEnded); } catch (e) { /* ignore */ }
+        }
+        if (onLoadedMetadata) {
+          try { vidEl.removeEventListener('loadedmetadata', onLoadedMetadata); } catch (e) { /* ignore */ }
         }
       }
     };
@@ -118,6 +162,7 @@ export default function HeroCarousel({ images, intervalMs = 4000 }: HeroCarousel
                 return (
                   <video
                     key={i}
+                    data-slide-index={i}
                     ref={i === index ? videoRef : null}
                     src={src}
                     playsInline

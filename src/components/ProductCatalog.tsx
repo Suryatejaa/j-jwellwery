@@ -189,7 +189,7 @@ export default function ProductCatalog({ initialProducts }: ProductCatalogProps)
             </div>
           </div>
 
-          <div className="flex gap-2 items-center mt-2 md:mt-0">
+          <div className="flex gap-2 items-center md:mt-0">
             <select
               value={sortOption}
               onChange={(e) => setSortOption(e.target.value)}

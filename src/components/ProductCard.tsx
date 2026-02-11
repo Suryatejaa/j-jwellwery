@@ -81,7 +81,7 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
           <h3 className="text-lg font-semibold text-gray-800 mb-2">{product.name}</h3>
           <p className="text-gray-600 text-sm mb-3 line-clamp-2">{product.description}</p>
           <div className="flex justify-between items-center">
-            <span className="text-2xl font-bold text-emerald-600">₹{product.price}</span>
+            <span className="text-2xl font-bold text-yellow-600">₹{product.price}</span>
             <button
               onClick={(e) => {
                 e.preventDefault();
@@ -90,8 +90,8 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
               }}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 isAdded
-                  ? 'bg-green-600 text-white'
-                  : 'bg-emerald-600 text-white hover:bg-emerald-700'
+                  ? 'bg-yellow-600 text-white'
+                  : 'bg-amber-600 text-white hover:bg-amber-700'
               }`}
             >
               {isAdded ? '✓ Added' : 'Add to Cart'}

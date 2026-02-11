@@ -29,7 +29,7 @@ export default function AdminNav() {
   return (
     <nav className="bg-slate-800 text-white p-4 shadow-lg">
       <div className="max-w-6xl mx-auto flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Jewelry Admin</h1>
+        <h1 className="text-2xl font-bold">Jewellery Admin</h1>
         <div className="flex items-center gap-4">
           <span className="text-sm">{user?.email}</span>
           <button

@@ -1,6 +1,6 @@
-# 💎 Jewelry Showcase - Serverless Application
+# 💎 Jewellery Showcase - Serverless Application
 
-A modern Next.js + Firebase serverless application for jewelry businesses. Allows customers to browse and order products via WhatsApp, while admins can manage the product catalog.
+A modern Next.js + Firebase serverless application for jewellery businesses. Allows customers to browse and order products via WhatsApp, while admins can manage the product catalog.
 
 ## Features
 

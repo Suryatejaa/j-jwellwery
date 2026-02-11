@@ -41,7 +41,7 @@ export default async function Home() {
           <div className="max-w-6xl mx-auto px-4 py-3">
             <div className="flex justify-between items-center">
               <div>
-                <h1 className="text-3xl font-bold text-slate-800">Jewelry & More</h1>
+                <h1 className="text-3xl font-bold text-slate-800">Jewellery & More</h1>
                 <p className="text-slate-600 text-sm mt-1">Premium Collection</p>
               </div>
               <a
@@ -67,7 +67,7 @@ export default async function Home() {
           <div className="max-w-6xl mx-auto px-4 py-3">
             <div className="flex justify-between items-center">
               <div>
-                <h1 className="text-3xl font-bold text-slate-800">Jewelry & More</h1>
+                <h1 className="text-3xl font-bold text-slate-800">Jewellery & More</h1>
                 <p className="text-slate-600 text-sm mt-1">Premium Collection</p>
               </div>
               <a

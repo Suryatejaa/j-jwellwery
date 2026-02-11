@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Jewelry Showcase",
-  description: "Premium jewelry collection - Shop and order via WhatsApp",
+  title: "Jewellery Showcase",
+  description: "Premium jewellery collection - Shop and order via WhatsApp",
 };
 
 export default function RootLayout({

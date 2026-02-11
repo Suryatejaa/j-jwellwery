@@ -1,4 +1,4 @@
-# Project Summary - Jewelry Showcase Serverless App
+# Project Summary - Jewellery Showcase Serverless App
 
 ## ✅ What's Been Built
 

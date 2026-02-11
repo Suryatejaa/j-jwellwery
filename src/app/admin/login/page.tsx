@@ -37,7 +37,7 @@ export default function AdminLogin() {
       <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-slate-800">✨ Admin</h1>
-          <p className="text-slate-600 mt-2">Jewelry Showcase Management</p>
+          <p className="text-slate-600 mt-2">Jewellery Showcase Management</p>
         </div>
 
         {error && (
@@ -57,7 +57,7 @@ export default function AdminLogin() {
               onChange={(e) => setEmail(e.target.value)}
               required
               className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent"
-              placeholder="admin@jewelry.com"
+              placeholder="admin@jewellery.com"
             />
           </div>
 

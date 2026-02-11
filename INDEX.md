@@ -1,6 +1,6 @@
-# 📚 Jewelry Showcase - Complete Documentation Index
+# 📚 Jewellery Showcase - Complete Documentation Index
 
-Welcome to the Jewelry Showcase serverless application! This is your comprehensive guide to the project.
+Welcome to the Jewellery Showcase serverless application! This is your comprehensive guide to the project.
 
 ## 🚀 Getting Started (Choose Your Path)
 

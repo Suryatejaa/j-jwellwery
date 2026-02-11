@@ -37,7 +37,7 @@ Visit http://localhost:3000
 ### 1. Create Firebase Project
 - Go to https://console.firebase.google.com
 - Click "Add project"
-- Name it "jewelry-showcase"
+- Name it "jewellery-showcase"
 - Click "Create project"
 
 ### 2. Enable Firestore

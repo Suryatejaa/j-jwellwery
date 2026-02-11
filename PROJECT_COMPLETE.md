@@ -2,7 +2,7 @@
 
 ## ✅ Everything is Built and Ready!
 
-Your **Jewelry Showcase Serverless Application** is complete, tested, and production-ready.
+Your **Jewellery Showcase Serverless Application** is complete, tested, and production-ready.
 
 ---
 
@@ -445,7 +445,7 @@ Deployment Ready: YES
 
 **Everything is done. Everything is ready.**
 
-Your jewelry showcase application is complete and ready to use. Pick any documentation file and get started. The hardest part is done—now it's just customization and launching!
+Your jewellery showcase application is complete and ready to use. Pick any documentation file and get started. The hardest part is done—now it's just customization and launching!
 
 ---
 
@@ -464,7 +464,7 @@ Your jewelry showcase application is complete and ready to use. Pick any documen
 
 ---
 
-**Made with ❤️ for your jewelry business.**
+**Made with ❤️ for your jewellery business.**
 
 **Status: 🟢 Production Ready**  
 **Quality: ⭐⭐⭐⭐⭐ Production Grade**  

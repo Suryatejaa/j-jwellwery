@@ -132,7 +132,7 @@ export default function ProductDetailClient({ productId }: ProductDetailClientPr
               </svg>
               
             </Link>
-            <h1 className="text-3xl font-bold text-slate-800">✨ Jewelry Showcase</h1>
+            <h1 className="text-3xl font-bold text-slate-800">Jewelry & More</h1>
           </div>
         </div>
       </header>

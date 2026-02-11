@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Product } from '@/types';
 import { convertPrivateToPublicR2Url } from '@/lib/url-utils';
 import ImageCropper from './ImageCropper';
+import { CATEGORIES as categories } from '@/lib/categories';
 
 interface ProductFormProps {
   product?: Product;
@@ -27,6 +28,7 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
   const [cropImage, setCropImage] = useState<string | null>(null);
   const [filesToCrop, setFilesToCrop] = useState<File[]>([]);
   const [currentCropIndex, setCurrentCropIndex] = useState(0);
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -244,11 +246,11 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
           >
             <option value="">Select category</option>
-            <option value="rings">Rings</option>
-            <option value="necklaces">Necklaces</option>
-            <option value="bracelets">Bracelets</option>
-            <option value="earrings">Earrings</option>
-            <option value="pendants">Pendants</option>
+            {categories.map((cat) => (
+              <option key={cat.value} value={cat.value}>
+                {cat.label}
+              </option>
+            ))}
           </select>
         </div>
       </div>

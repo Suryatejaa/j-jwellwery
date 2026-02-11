@@ -2,6 +2,8 @@ import ProductCatalog from '@/components/ProductCatalog';
 import { Product } from '@/types';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, orderBy, query } from 'firebase/firestore';
+import fs from 'fs';
+import path from 'path';
 
 export default async function Home() {
   try {
@@ -9,6 +11,28 @@ export default async function Home() {
     const q = query(productsRef, orderBy('createdAt', 'desc'));
     const snapshot = await getDocs(q);
     const products = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Product[];
+
+    // Load hero images from public/hero (if available)
+    let heroImages: string[] = [];
+    try {
+      const heroDir = path.join(process.cwd(), 'public', 'hero');
+      if (fs.existsSync(heroDir)) {
+        const files = fs
+          .readdirSync(heroDir)
+          .filter((f) => /\.(jpe?g|png|webp|svg|mp4)$/i.test(f))
+          // prefer mp4 first, then alphabetical
+          .sort((a, b) => {
+            const aIsVideo = /\.mp4$/i.test(a);
+            const bIsVideo = /\.mp4$/i.test(b);
+            if (aIsVideo && !bIsVideo) return -1;
+            if (!aIsVideo && bIsVideo) return 1;
+            return a.localeCompare(b);
+          });
+        heroImages = files.map((f) => `/hero/${f}`);
+      }
+    } catch (err) {
+      console.error('Error reading hero images:', err);
+    }
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
@@ -31,7 +55,7 @@ export default async function Home() {
         </header>
 
         <main className="max-w-6xl mx-auto px-4 py-2">
-          <ProductCatalog initialProducts={products} />
+          <ProductCatalog initialProducts={products} heroImages={heroImages} />
         </main>
       </div>
     );

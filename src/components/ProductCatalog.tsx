@@ -4,13 +4,15 @@ import { useEffect, useMemo, useState } from 'react';
 import { Product, CartItem } from '@/types';
 import ProductCard from '@/components/ProductCard';
 import Cart from '@/components/Cart';
+import HeroCarousel from './HeroCarousel';
 import { CATEGORIES } from '@/lib/categories';
 
 interface ProductCatalogProps {
   initialProducts: Product[];
+  heroImages?: string[];
 }
 
-export default function ProductCatalog({ initialProducts }: ProductCatalogProps) {
+export default function ProductCatalog({ initialProducts, heroImages = [] }: ProductCatalogProps) {
   const [products] = useState<Product[]>(initialProducts || []);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [search, setSearch] = useState('');
@@ -145,6 +147,13 @@ export default function ProductCatalog({ initialProducts }: ProductCatalogProps)
 
   return (
     <div>
+      {/* Hero */}
+      {heroImages && heroImages.length > 0 && (
+        <div className="mb-6">
+          <HeroCarousel images={heroImages} />
+        </div>
+      )}
+
       {/* Filters */}
       <div className="mb-6">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">

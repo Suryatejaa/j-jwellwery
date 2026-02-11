@@ -7,7 +7,6 @@ export const CATEGORIES = [
   { value: 'short-necklaces', label: 'Short Necklaces' },
   { value: 'jumkas', label: 'Jumkas' },
   { value: 'buttalu', label: 'Buttalu' },
-  { value: 'ear', label: 'Ear' },
   { value: 'chandra-haralu', label: 'Chandra Haralu' },
   { value: 'black-beads', label: 'Black Beads' },
   { value: 'bangles', label: 'Bangles' },

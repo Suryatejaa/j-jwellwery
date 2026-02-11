@@ -130,7 +130,7 @@ export default function ProductDetailClient({ productId }: ProductDetailClientPr
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
-              Back
+              
             </Link>
             <h1 className="text-3xl font-bold text-slate-800">✨ Jewelry Showcase</h1>
           </div>
@@ -159,7 +159,7 @@ export default function ProductDetailClient({ productId }: ProductDetailClientPr
 
             {/* Price */}
             <div className="text-5xl font-bold text-emerald-600 mb-6">
-              ${product.price.toFixed(2)}
+              ₹{product.price.toFixed(2)}
             </div>
 
             {/* Description */}

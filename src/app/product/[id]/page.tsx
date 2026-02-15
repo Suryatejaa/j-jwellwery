@@ -1,6 +1,8 @@
 import { headers } from 'next/headers';
 import ProductDetailClient from '@/components/ProductDetailClient';
 import { Product } from '@/types';
+import { db } from '@/lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,36 +34,57 @@ async function fetchProduct(baseUrl: string, productId: string) {
 
 export async function generateMetadata({ params }: PageParams) {
   const baseUrl = await getBaseUrl();
-  const product = (await fetchProduct(baseUrl, params.id)) as Product | null;
 
-  if (!product) {
-    return {
-      title: 'Product Not Found',
-    };
+  // `params` may be a Promise in newer Next versions — unwrap first
+  const resolvedParams = (await (params as any)) as { id?: string };
+  if (!resolvedParams || !resolvedParams.id || typeof resolvedParams.id !== 'string') {
+    console.warn('generateMetadata: invalid params', params);
+    return { title: 'Product Not Found' };
   }
 
-  const imageUrl = product.images?.[0] || product.image || `${baseUrl}/placeholder.svg`;
-  const description = product.description || 'View product details';
-  const url = `${baseUrl}/product/${product.id}`;
+  const productId = resolvedParams.id;
 
-  return {
-    title: product.name,
-    description,
-    openGraph: {
+  try {
+    console.log('[generateMetadata] productId:', productId, 'baseUrl:', baseUrl || '(none)');
+
+    // Read product directly from Firestore (server-side) — more reliable for metadata
+    const productRef = doc(db, 'products', productId);
+    const snap = await getDoc(productRef);
+
+    if (!snap.exists()) {
+      console.warn('[generateMetadata] product not found in Firestore', productId);
+      return { title: 'Product Not Found' };
+    }
+
+    const product = { id: snap.id, ...(snap.data() as any) } as Product;
+    const imageUrl = product.images?.[0] || product.image || `${baseUrl}/placeholder.svg`;
+    const description = product.description || 'View product details';
+    const url = baseUrl ? `${baseUrl}/product/${product.id}` : `/product/${product.id}`;
+
+    return {
       title: product.name,
       description,
-      url,
-      images: [{ url: imageUrl }],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: product.name,
-      description,
-      images: [imageUrl],
-    },
-  };
+      openGraph: {
+        title: product.name,
+        description,
+        url,
+        images: [{ url: imageUrl }],
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: product.name,
+        description,
+        images: [imageUrl],
+      },
+    };
+  } catch (err) {
+    console.error('generateMetadata error:', err);
+    return { title: 'Product Not Found' };
+  }
 }
 
-export default function ProductDetail({ params }: PageParams) {
-  return <ProductDetailClient productId={params.id} />;
+export default async function ProductDetail({ params }: PageParams) {
+  const resolvedParams = (await (params as any)) as { id?: string };
+  const productId = resolvedParams?.id || '';
+  return <ProductDetailClient productId={productId} />;
 }

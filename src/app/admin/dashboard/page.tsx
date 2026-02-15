@@ -34,7 +34,7 @@ export default function AdminDashboard() {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/products');
+      const response = await fetch('/api/products', { cache: 'no-store' });
       if (!response.ok) throw new Error('Failed to fetch products');
       const data = await response.json();
       setProducts(data);
@@ -90,6 +90,8 @@ export default function AdminDashboard() {
 
       if (!response.ok) throw new Error('Failed to delete product');
 
+      // optimistically remove from UI immediately, then refresh
+      setProducts((prev) => prev.filter((p) => p.id !== id));
       fetchProducts();
     } catch (error) {
       console.error('Error deleting product:', error);

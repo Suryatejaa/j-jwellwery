@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     if (!name || !price || !image || !category) {
       return NextResponse.json(
         { error: 'Missing required fields' },
-        { status: 400 }
+        { status: 400, headers: { 'Cache-Control': 'no-store' } }
       );
     }
 
@@ -36,13 +36,13 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       { id: docRef.id, message: 'Product created successfully' },
-      { status: 201 }
+      { status: 201, headers: { 'Cache-Control': 'no-store' } }
     );
   } catch (error) {
     console.error('Error creating product:', error);
     return NextResponse.json(
       { error: 'Failed to create product' },
-      { status: 500 }
+      { status: 500, headers: { 'Cache-Control': 'no-store' } }
     );
   }
 }
@@ -55,7 +55,7 @@ export async function PUT(request: NextRequest) {
     if (!id) {
       return NextResponse.json(
         { error: 'Product ID is required' },
-        { status: 400 }
+        { status: 400, headers: { 'Cache-Control': 'no-store' } }
       );
     }
 
@@ -71,12 +71,12 @@ export async function PUT(request: NextRequest) {
       updatedAt: Timestamp.now().toMillis(),
     });
 
-    return NextResponse.json({ message: 'Product updated successfully' });
+    return NextResponse.json({ message: 'Product updated successfully' }, { status: 200, headers: { 'Cache-Control': 'no-store' } });
   } catch (error) {
     console.error('Error updating product:', error);
     return NextResponse.json(
       { error: 'Failed to update product' },
-      { status: 500 }
+      { status: 500, headers: { 'Cache-Control': 'no-store' } }
     );
   }
 }
@@ -89,19 +89,19 @@ export async function DELETE(request: NextRequest) {
     if (!id) {
       return NextResponse.json(
         { error: 'Product ID is required' },
-        { status: 400 }
+        { status: 400, headers: { 'Cache-Control': 'no-store' } }
       );
     }
 
     const productRef = doc(db, 'products', id);
     await deleteDoc(productRef);
 
-    return NextResponse.json({ message: 'Product deleted successfully' });
+    return NextResponse.json({ message: 'Product deleted successfully' }, { status: 200, headers: { 'Cache-Control': 'no-store' } });
   } catch (error) {
     console.error('Error deleting product:', error);
     return NextResponse.json(
       { error: 'Failed to delete product' },
-      { status: 500 }
+      { status: 500, headers: { 'Cache-Control': 'no-store' } }
     );
   }
 }

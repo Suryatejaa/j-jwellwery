@@ -32,7 +32,7 @@ export default function ProductDetailClient({ productId }: ProductDetailClientPr
         return;
       }
       setLoading(true);
-      const response = await fetch(`/api/products?id=${resolvedProductId}`);
+      const response = await fetch(`/api/products?id=${resolvedProductId}`, { cache: 'no-store' });
       if (!response.ok) throw new Error('Product not found');
       const data = await response.json();
       setProduct(Array.isArray(data) ? data[0] : data);

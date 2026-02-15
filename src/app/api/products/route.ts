@@ -15,14 +15,14 @@ export async function GET(request: NextRequest) {
       if (!docSnap.exists()) {
         return NextResponse.json(
           { error: 'Product not found' },
-          { status: 404 }
+          { status: 404, headers: { 'Cache-Control': 'no-store' } }
         );
       }
 
       return NextResponse.json({
         id: docSnap.id,
         ...docSnap.data(),
-      });
+      }, { status: 200, headers: { 'Cache-Control': 'no-store' } });
     }
 
     // Otherwise fetch all products
@@ -35,12 +35,12 @@ export async function GET(request: NextRequest) {
       ...doc.data(),
     }));
 
-    return NextResponse.json(products);
+    return NextResponse.json(products, { status: 200, headers: { 'Cache-Control': 'no-store' } });
   } catch (error) {
     console.error('Error fetching products:', error);
     return NextResponse.json(
       { error: 'Failed to fetch products' },
-      { status: 500 }
+      { status: 500, headers: { 'Cache-Control': 'no-store' } }
     );
   }
 }

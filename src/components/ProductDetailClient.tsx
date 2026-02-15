@@ -110,12 +110,14 @@ export default function ProductDetailClient({ productId }: ProductDetailClientPr
     );
   }
 
-  const displayImages =
-    product.images && product.images.length > 0
+  const displayMedia = [
+    ...(product.video ? [product.video] : []),
+    ...(product.images && product.images.length > 0
       ? product.images
       : product.image
         ? [product.image]
-        : ['/placeholder.svg'];
+        : ['/placeholder.svg']),
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -140,9 +142,9 @@ export default function ProductDetailClient({ productId }: ProductDetailClientPr
       {/* Product Details */}
       <main className="max-w-6xl mx-auto px-4 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Carousel */}
-          <div>
-            <Carousel images={displayImages} title={product.name} />
+          {/* Carousel (images + optional product video) */}
+          <div className="space-y-4">
+            <Carousel images={displayMedia} title={product.name} />
           </div>
 
           {/* Product Info */}
@@ -171,9 +173,9 @@ export default function ProductDetailClient({ productId }: ProductDetailClientPr
             </div>
 
             {/* Image Count */}
-            {displayImages.length > 1 && (
+            {displayMedia.length > 1 && (
               <div className="mb-6 p-3 bg-blue-50 border border-blue-200 text-blue-700 rounded-lg text-sm">
-                📸 This product has {displayImages.length} high-quality images. Use the carousel above to view all!
+                📸 This product has {displayMedia.length} high-quality images. Use the carousel above to view all!
               </div>
             )}
 

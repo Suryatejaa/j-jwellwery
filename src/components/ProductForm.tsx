@@ -22,7 +22,10 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
   const [uploadedImages, setUploadedImages] = useState<string[]>(
     product?.images?.length ? product.images : (product?.image ? [product.image] : [])
   );
+  const [uploadedVideo, setUploadedVideo] = useState<string | null>(product?.video || null);
   const [uploading, setUploading] = useState(false);
+  const [videoUploading, setVideoUploading] = useState(false);
+  const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [cropImage, setCropImage] = useState<string | null>(null);
@@ -43,6 +46,92 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
     if (formData.image === uploadedImages[index]) {
       setFormData((prev) => ({ ...prev, image: newImages[0] || '' }));
     }
+  };
+
+  const handleVideoSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Only one video allowed
+    if (uploadedVideo) {
+      setError('Only one video is allowed per product');
+      return;
+    }
+
+    // Size check: <= 2MB (2048 KB)
+    const MAX_VIDEO_BYTES = 2 * 1024 * 1024; // 2 MB
+    if (file.size > MAX_VIDEO_BYTES) {
+      setError('Video file must be 2MB (2048 KB) or smaller');
+      return;
+    }
+
+    setError('');
+    const objectUrl = URL.createObjectURL(file);
+    setVideoPreview(objectUrl);
+
+    // Check duration
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const vid = document.createElement('video');
+        vid.preload = 'metadata';
+        vid.src = objectUrl;
+        const cleanup = () => {
+          vid.src = '';
+          URL.revokeObjectURL(objectUrl);
+          vid.remove();
+        };
+
+        const onLoaded = () => {
+          const duration = vid.duration || 0;
+          cleanup();
+          if (duration > 5) {
+            reject(new Error('Video duration must be 5 seconds or less'));
+          } else {
+            resolve();
+          }
+        };
+
+        const onError = () => {
+          cleanup();
+          reject(new Error('Failed to read video metadata'));
+        };
+
+        vid.addEventListener('loadedmetadata', onLoaded, { once: true });
+        vid.addEventListener('error', onError, { once: true });
+      });
+    } catch (err: any) {
+      setVideoPreview(null);
+      setError(err.message || 'Invalid video');
+      return;
+    }
+
+    // Upload video
+    setVideoUploading(true);
+    try {
+      const form = new FormData();
+      form.append('video', file);
+
+      const res = await fetch('/api/upload-video', {
+        method: 'POST',
+        body: form,
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Video upload failed');
+
+      setUploadedVideo(data.url);
+      setVideoPreview(null);
+    } catch (err: any) {
+      console.error('[VIDEO UPLOAD] Error:', err);
+      setError(err.message || 'Video upload failed');
+    } finally {
+      setVideoUploading(false);
+    }
+  };
+
+  const removeVideo = () => {
+    setUploadedVideo(null);
+    setVideoPreview(null);
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -149,10 +238,11 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
         return;
       }
       
-      // Pass both image (main) and images (array) to backend
+      // Pass both image (main), images (array) and optional video URL to backend
       await onSubmit({
         ...formData,
         images: uploadedImages,
+        video: uploadedVideo || null,
       });
       
       if (!product) {
@@ -270,6 +360,57 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
         <p className="text-xs text-gray-500 mt-1">
           {uploadedImages.length}/6 images uploaded. Max 5MB per image.
         </p>
+      </div>
+
+      <div className="mt-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Product Video (Optional — 1 file, ≤ 2MB, ≤ 5s)
+        </label>
+        <input
+          type="file"
+          accept="video/*"
+          onChange={handleVideoSelected}
+          disabled={videoUploading || !!uploadedVideo}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent disabled:bg-gray-100"
+        />
+        <p className="text-xs text-gray-500 mt-1">
+          {uploadedVideo ? '1 video uploaded' : 'No video uploaded. Max 2MB (2048 KB), max duration 5 seconds.'}
+        </p>
+
+        {videoPreview && (
+          <div className="mt-3">
+            <video src={videoPreview} className="w-48 h-28 object-cover rounded-lg" controls />
+          </div>
+        )}
+
+        {uploadedVideo && (
+          <div className="mt-3 flex items-start gap-3">
+            <video
+              src={convertPrivateToPublicR2Url(uploadedVideo)}
+              className="w-48 h-28 object-cover rounded-lg"
+              controls
+              onError={(e) => {
+                console.log('[VIDEO PREVIEW] Failed to load video preview', e);
+              }}
+            />
+            <div className="flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={removeVideo}
+                className="bg-red-600 text-white px-3 py-1 rounded text-sm"
+              >
+                Remove Video
+              </button>
+              <p className="text-xs text-gray-500">Uploaded video will be shown on product page.</p>
+            </div>
+          </div>
+        )}
+
+        {videoUploading && (
+          <div className="p-3 bg-blue-50 border border-blue-200 text-blue-700 rounded-lg text-sm mt-3">
+            Uploading video...
+          </div>
+        )}
       </div>
 
       {uploadedImages.length > 0 && (

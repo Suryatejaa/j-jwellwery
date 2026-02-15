@@ -52,6 +52,13 @@ function ProductListItem({ product, onEdit, onDelete }: { product: Product; onEd
           </div>
         )}
 
+        {/* Video indicator */}
+        {product.video && (
+          <div className="absolute top-2 left-20 bg-yellow-400 text-white px-2 py-1 rounded text-xs font-medium">
+            🎬 Video
+          </div>
+        )}
+
         <div className="absolute top-2 right-2 bg-emerald-600 text-white px-2 py-1 rounded text-xs font-medium">
           {product.category}
         </div>

@@ -12,7 +12,7 @@ import {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, description, price, image, category, images } = body;
+    const { name, description, price, image, category, images, video } = body;
 
     if (!name || !price || !image || !category) {
       return NextResponse.json(
@@ -29,6 +29,7 @@ export async function POST(request: NextRequest) {
       image,
       images: images && images.length > 0 ? images : [image],
       category,
+      video: video || null,
       createdAt: Timestamp.now().toMillis(),
       updatedAt: Timestamp.now().toMillis(),
     });
@@ -49,7 +50,7 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const { id, name, description, price, image, category, images } = body;
+    const { id, name, description, price, image, category, images, video } = body;
 
     if (!id) {
       return NextResponse.json(
@@ -66,6 +67,7 @@ export async function PUT(request: NextRequest) {
       image,
       images: images && images.length > 0 ? images : [image],
       category,
+      video: video || null,
       updatedAt: Timestamp.now().toMillis(),
     });
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Cropper from 'react-easy-crop';
 import { Area } from 'react-easy-crop';
 
@@ -15,9 +15,46 @@ export default function ImageCropper({ imageSrc, onCropDone, onCancel }: ImageCr
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
 
+  // Aspect handling: undefined = free crop
+  const [aspect, setAspect] = useState<number | undefined>(undefined);
+  const [originalAspect, setOriginalAspect] = useState<number | null>(null);
+
+  useEffect(() => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.src = imageSrc;
+    const onLoad = () => {
+      if (img.naturalWidth && img.naturalHeight) {
+        setOriginalAspect(img.naturalWidth / img.naturalHeight);
+      } else {
+        setOriginalAspect(null);
+      }
+    };
+    img.addEventListener('load', onLoad);
+    img.addEventListener('error', () => setOriginalAspect(null));
+    return () => {
+      img.removeEventListener('load', onLoad);
+    };
+  }, [imageSrc]);
+
+  const aspectLabel =
+    aspect === undefined
+      ? 'Free'
+      : originalAspect && Math.abs((aspect || 0) - originalAspect) < 0.001
+      ? 'Original'
+      : aspect === 1
+      ? '1:1'
+      : aspect === 3 / 4
+      ? '3:4'
+      : aspect === 4 / 3
+      ? '4:3'
+      : aspect === 16 / 9
+      ? '16:9'
+      : `${aspect?.toFixed(2)}`;
+
   const onCropComplete = (croppedArea: Area, croppedAreaPixels: Area) => {
     setCroppedAreaPixels(croppedAreaPixels);
-  };
+  }; 
 
   const handleCropImage = async () => {
     if (!croppedAreaPixels) return;
@@ -84,14 +121,65 @@ export default function ImageCropper({ imageSrc, onCropDone, onCancel }: ImageCr
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg max-w-2xl w-full">
         <div className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Crop Image (1:1 ratio)</h3>
+          <h3 className="text-lg font-semibold mb-4">Crop Image — Aspect: {aspectLabel}</h3>
+
+          <div className="mb-4 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setAspect(undefined)}
+              className={`px-3 py-1 rounded-md border text-sm ${aspect === undefined ? 'bg-emerald-600 text-white' : 'bg-white text-gray-700'}`}
+            >
+              Free
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setAspect(originalAspect ?? undefined)}
+              disabled={!originalAspect}
+              className={`px-3 py-1 rounded-md border text-sm ${originalAspect && Math.abs((aspect || 0) - (originalAspect || 0)) < 0.001 ? 'bg-emerald-600 text-white' : 'bg-white text-gray-700'} ${!originalAspect ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              Original
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setAspect(1)}
+              className={`px-3 py-1 rounded-md border text-sm ${aspect === 1 ? 'bg-emerald-600 text-white' : 'bg-white text-gray-700'}`}
+            >
+              1:1
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setAspect(3 / 4)}
+              className={`px-3 py-1 rounded-md border text-sm ${Math.abs((aspect || 0) - 3 / 4) < 0.001 ? 'bg-emerald-600 text-white' : 'bg-white text-gray-700'}`}
+            >
+              3:4
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setAspect(4 / 3)}
+              className={`px-3 py-1 rounded-md border text-sm ${Math.abs((aspect || 0) - 4 / 3) < 0.001 ? 'bg-emerald-600 text-white' : 'bg-white text-gray-700'}`}
+            >
+              4:3
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setAspect(16 / 9)}
+              className={`px-3 py-1 rounded-md border text-sm ${Math.abs((aspect || 0) - 16 / 9) < 0.001 ? 'bg-emerald-600 text-white' : 'bg-white text-gray-700'}`}
+            >
+              16:9
+            </button>
+          </div>
 
           <div className="relative w-full h-96 bg-gray-200 rounded-lg overflow-hidden mb-6">
             <Cropper
               image={imageSrc}
               crop={crop}
               zoom={zoom}
-              aspect={3 / 4}
+              {...(typeof aspect === 'number' ? { aspect } : {})}
               cropShape="rect"
               showGrid
               onCropChange={setCrop}

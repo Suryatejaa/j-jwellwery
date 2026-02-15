@@ -6,6 +6,7 @@ export interface Product {
   image: string;
   images?: string[];
   category: string;
+  video?: string;
   createdAt: number;
   updatedAt: number;
 }

@@ -20,7 +20,31 @@ export const metadata: Metadata = {
     shortcut: '/logo.png',
     apple: '/logo.png',
   },
+  openGraph: {
+    title: 'Jewellery Showcase',
+    description: 'Premium jewellery collection - Shop and order via WhatsApp',
+    url: '/',
+    siteName: 'Jewellery Showcase',
+    type: 'website',
+    images: [
+      {
+        url: '/logo.png',
+        alt: 'Jewellery Showcase',
+        width: 1200,
+        height: 630,
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Jewellery Showcase',
+    description: 'Premium jewellery collection - Shop and order via WhatsApp',
+    images: ['/logo.png'],
+  },
 };
+
+// Make Next.js resolve relative metadata URLs against this base when needed
+export const metadataBase = process.env.NEXT_PUBLIC_SITE_URL ? new URL(process.env.NEXT_PUBLIC_SITE_URL) : undefined;
 
 import { Analytics } from '@vercel/analytics/react';
 

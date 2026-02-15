@@ -57,7 +57,17 @@ export async function generateMetadata({ params }: PageParams) {
     }
 
     const product = { id: snap.id, ...(snap.data() as any) } as Product;
-    const imageUrl = product.images?.[0] || product.image || `${baseUrl}/placeholder.svg`;
+
+    // Normalize image URL to absolute so social crawlers (WhatsApp/Facebook) can fetch it reliably
+    let imageUrl = product.images?.[0] || product.image || '/placeholder.svg';
+    if (imageUrl.startsWith('/')) {
+      imageUrl = baseUrl ? `${baseUrl}${imageUrl}` : imageUrl;
+    }
+    // ensure protocol-present absolute url for external/public assets
+    if (!/^https?:\/\//i.test(imageUrl) && baseUrl) {
+      imageUrl = `${baseUrl}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
+    }
+
     const description = product.description || 'View product details';
     const url = baseUrl ? `${baseUrl}/product/${product.id}` : `/product/${product.id}`;
 
@@ -68,7 +78,15 @@ export async function generateMetadata({ params }: PageParams) {
         title: product.name,
         description,
         url,
-        images: [{ url: imageUrl }],
+        images: [
+          {
+            url: imageUrl,
+            alt: product.name,
+            // recommended size for social previews
+            width: 1200,
+            height: 630,
+          },
+        ],
       },
       twitter: {
         card: 'summary_large_image',

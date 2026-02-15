@@ -288,6 +288,7 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
           value={formData.name}
           onChange={handleChange}
           required
+          autoFocus
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
           placeholder="e.g., Diamond Ring"
         />

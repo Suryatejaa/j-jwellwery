@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import AdminNav from '@/components/AdminNav';
+import Modal from '@/components/Modal';
 import ProductForm from '@/components/ProductForm';
 import ProductList from '@/components/ProductList';
 import { Product } from '@/types';
@@ -118,15 +119,23 @@ export default function AdminDashboard() {
         </div>
 
         {showForm && (
-          <div className="mb-8 bg-white p-6 rounded-lg shadow-md">
-            <h3 className="text-lg font-semibold mb-4">
-              {editingProduct ? 'Edit Product' : 'Add New Product'}
-            </h3>
-            <ProductForm
-              product={editingProduct || undefined}
-              onSubmit={editingProduct ? handleUpdateProduct : handleAddProduct}
-            />
-          </div>
+          <Modal
+            onClose={() => {
+              setShowForm(false);
+              setEditingProduct(null);
+            }}
+          >
+            <div className="p-4">
+              <h3 className="text-lg font-semibold mb-4">
+                {editingProduct ? 'Edit Product' : 'Add New Product'}
+              </h3>
+
+              <ProductForm
+                product={editingProduct || undefined}
+                onSubmit={editingProduct ? handleUpdateProduct : handleAddProduct}
+              />
+            </div>
+          </Modal>
         )}
 
         {loading ? (

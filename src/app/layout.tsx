@@ -15,6 +15,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Jewellery Showcase",
   description: "Premium jewellery collection - Shop and order via WhatsApp",
+  icons: {
+    icon: '/logo.png',
+    shortcut: '/logo.png',
+    apple: '/logo.png',
+  },
 };
 
 import { Analytics } from '@vercel/analytics/react';

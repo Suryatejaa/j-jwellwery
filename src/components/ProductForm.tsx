@@ -231,6 +231,13 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
     setError('');
     setLoading(true);
 
+    // Prevent submit while video is still uploading
+    if (videoUploading) {
+      setError('Video is still uploading — please wait until it finishes.');
+      setLoading(false);
+      return;
+    }
+
     try {
       if (!formData.name || !formData.price || !formData.image || !formData.category) {
         setError('Please fill in all required fields');
@@ -472,7 +479,7 @@ export default function ProductForm({ product, onSubmit }: ProductFormProps) {
 
       <button
         type="submit"
-        disabled={loading || uploading}
+        disabled={loading || uploading || videoUploading}
         className="w-full bg-emerald-600 text-white py-2 rounded-lg hover:bg-emerald-700 transition-colors font-medium disabled:opacity-50"
       >
         {loading ? 'Saving...' : product ? 'Update Product' : 'Add Product'}

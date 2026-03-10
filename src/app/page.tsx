@@ -1,15 +1,16 @@
 import ProductCatalog from '@/components/ProductCatalog';
 import { Product } from '@/types';
-import { db } from '@/lib/firebase';
-import { collection, getDocs, orderBy, query } from 'firebase/firestore';
+// server-side uses the admin SDK so we bypass security rules
+import { adminDb } from '@/lib/firebaseAdmin';
 import fs from 'fs';
 import path from 'path';
 
 export default async function Home() {
   try {
-    const productsRef = collection(db, 'products');
-    const q = query(productsRef, orderBy('createdAt', 'desc'));
-    const snapshot = await getDocs(q);
+    const snapshot = await adminDb
+      .collection('products')
+      .orderBy('createdAt', 'desc')
+      .get();
     const products = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Product[];
 
     // Load hero images from public/hero (if available)

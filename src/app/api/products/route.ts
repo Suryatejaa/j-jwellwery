@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/firebase';
-import { collection, getDocs, query, orderBy, doc, getDoc } from 'firebase/firestore';
+// public API is executed on the server; use admin SDK to bypass rules
+import { adminDb } from '@/lib/firebaseAdmin';
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,10 +9,9 @@ export async function GET(request: NextRequest) {
 
     // If requesting specific product, fetch by ID
     if (productId) {
-      const docRef = doc(db, 'products', productId);
-      const docSnap = await getDoc(docRef);
+      const docSnap = await adminDb.collection('products').doc(productId).get();
 
-      if (!docSnap.exists()) {
+      if (!docSnap.exists) {
         return NextResponse.json(
           { error: 'Product not found' },
           { status: 404, headers: { 'Cache-Control': 'no-store' } }
@@ -26,9 +25,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Otherwise fetch all products
-    const productsRef = collection(db, 'products');
-    const q = query(productsRef, orderBy('createdAt', 'desc'));
-    const snapshot = await getDocs(q);
+    const snapshot = await adminDb
+      .collection('products')
+      .orderBy('createdAt', 'desc')
+      .get();
     
     const products = snapshot.docs.map((doc) => ({
       id: doc.id,

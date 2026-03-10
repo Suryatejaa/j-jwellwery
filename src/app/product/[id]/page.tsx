@@ -1,8 +1,8 @@
 import { headers } from 'next/headers';
 import ProductDetailClient from '@/components/ProductDetailClient';
 import { Product } from '@/types';
-import { db } from '@/lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+// server components use admin SDK to avoid permission issues
+import { adminDb } from '@/lib/firebaseAdmin';
 
 export const dynamic = 'force-dynamic';
 
@@ -48,10 +48,9 @@ export async function generateMetadata({ params }: PageParams) {
     console.log('[generateMetadata] productId:', productId, 'baseUrl:', baseUrl || '(none)');
 
     // Read product directly from Firestore (server-side) — more reliable for metadata
-    const productRef = doc(db, 'products', productId);
-    const snap = await getDoc(productRef);
+    const snap = await adminDb.collection('products').doc(productId).get();
 
-    if (!snap.exists()) {
+    if (!snap.exists) {
       console.warn('[generateMetadata] product not found in Firestore', productId);
       return { title: 'Product Not Found' };
     }

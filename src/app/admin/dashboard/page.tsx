@@ -35,6 +35,7 @@ export default function AdminDashboard() {
     try {
       setLoading(true);
       const response = await fetch('/api/products', { cache: 'no-store' });
+      console.log('fetchProducts response:', response);
       if (!response.ok) throw new Error('Failed to fetch products');
       const data = await response.json();
       setProducts(data);

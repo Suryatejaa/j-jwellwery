@@ -1,13 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/firebase';
-import {
-  collection,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  doc,
-  Timestamp,
-} from 'firebase/firestore';
+// admin route is always executed on the server; authenticate using admin SDK
+import { adminDb } from '@/lib/firebaseAdmin';
+import { Timestamp } from 'firebase-admin/firestore';
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,8 +15,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const productsRef = collection(db, 'products');
-    const docRef = await addDoc(productsRef, {
+    const docRef = await adminDb.collection('products').add({
       name,
       description,
       price: parseFloat(price),
@@ -59,8 +52,8 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const productRef = doc(db, 'products', id);
-    await updateDoc(productRef, {
+    const productRef = adminDb.collection('products').doc(id);
+    await productRef.update({
       name,
       description,
       price: parseFloat(price),
@@ -93,8 +86,8 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const productRef = doc(db, 'products', id);
-    await deleteDoc(productRef);
+    const productRef = adminDb.collection('products').doc(id);
+    await productRef.delete();
 
     return NextResponse.json({ message: 'Product deleted successfully' }, { status: 200, headers: { 'Cache-Control': 'no-store' } });
   } catch (error) {

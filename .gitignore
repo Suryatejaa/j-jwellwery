@@ -33,7 +33,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
-
+env
 # service account credentials and other secrets
 j-jwellery-firebase-adminsdk-*.json
 .env.local

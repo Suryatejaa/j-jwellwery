@@ -5,17 +5,20 @@ import { getFirestore } from 'firebase-admin/firestore';
 
 // initialize firebase-admin once (Next.js may hot‑reload during development)
 // credentials can come from either a single JSON string, separate env vars,
-// or a path to a service account file on disk.
+// or a path to a service account file on disk (local dev only).
 function getServiceAccount() {
-  // first preference: explicit file path
+  // first preference: explicit file path (local development only)
   if (process.env.FIREBASE_SERVICE_ACCOUNT_PATH) {
     try {
       const filePath = path.resolve(process.cwd(), process.env.FIREBASE_SERVICE_ACCOUNT_PATH);
-      const contents = fs.readFileSync(filePath, 'utf8');
-      return JSON.parse(contents);
+      if (fs.existsSync(filePath)) {
+        const contents = fs.readFileSync(filePath, 'utf8');
+        return JSON.parse(contents);
+      }
+      // file doesn't exist; continue to next method
     } catch (err) {
-      console.error('Failed to load service account file:', err);
-      throw err;
+      console.warn('Failed to load service account file, trying env vars:', err);
+      // continue to next method
     }
   }
 

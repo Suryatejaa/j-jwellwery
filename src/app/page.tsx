@@ -83,7 +83,7 @@ export default async function Home() {
 
         <main className="max-w-6xl mx-auto px-4 py-2">
           <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">Failed to load products</p>
+            <p className="text-gray-500 text-lg">Failed to load products {String(err)}</p>
           </div>
         </main>
       </div>
